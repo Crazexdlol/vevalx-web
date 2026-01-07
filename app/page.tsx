@@ -82,12 +82,23 @@ function MagnifierIcon() {
   );
 }
 
+function SortIndicator({
+  active,
+  dir,
+}: {
+  active: boolean;
+  dir: SortDir;
+}) {
+  if (!active) return <span className="text-gray-300">▲</span>;
+  return <span className="text-gray-600">{dir === "asc" ? "▲" : "▼"}</span>;
+}
+
 export default function Home() {
   const [query, setQuery] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("claimNumber");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
-  // Local, editable data (so status changes persist on screen)
+  // Local editable state so status changes persist on screen (until refresh)
   const [claims, setClaims] = useState<Claim[]>(SAMPLE_CLAIMS);
 
   const filteredAndSorted = useMemo(() => {
@@ -124,11 +135,6 @@ export default function Home() {
     }
   }
 
-  function SortIndicator({ col }: { col: SortKey }) {
-    if (sortKey !== col) return <span className="text-gray-300">▲</span>;
-    return <span className="text-gray-600">{sortDir === "asc" ? "▲" : "▼"}</span>;
-  }
-
   function updateStatus(claimNumber: string, nextStatus: ClaimStatus) {
     setClaims((prev) =>
       prev.map((c) => (c.claimNumber === claimNumber ? { ...c, status: nextStatus } : c))
@@ -136,85 +142,92 @@ export default function Home() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold text-gray-900">Claims</h1>
+  <h1 className="text-3xl font-semibold text-gray-900">Dashboard</h1>
+</div>
 
-        <button
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600"
-          onClick={() => alert("New Claim clicked (we’ll wire this next)")}
-        >
-          <span className="text-lg leading-none">+</span>
-          New Claim
-        </button>
-      </div>
+{/* Search + New Claim on same row */}
+<div className="flex items-center justify-between gap-4">
+  <div className="relative w-full max-w-[560px]">
+    <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
+      <MagnifierIcon />
+    </div>
+    <input
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      placeholder="Search claims..."
+      className="w-full rounded-lg border bg-white py-2 pl-10 pr-3 text-sm outline-none focus:ring-2 focus:ring-gray-200"
+    />
+  </div>
 
-      {/* Search */}
-      <div className="relative">
-        <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-          <MagnifierIcon />
-        </div>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search claims..."
-          className="w-full rounded-lg border bg-white py-2 pl-10 pr-3 text-sm outline-none focus:ring-2 focus:ring-gray-200"
-        />
-      </div>
+  <button
+    className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600"
+    onClick={() => alert("New Claim clicked (we’ll wire this next)")}
+  >
+    <span className="text-lg leading-none">+</span>
+    New Claim
+  </button>
+</div>
 
       {/* Table */}
       <div className="overflow-hidden rounded-lg border bg-white">
-        <table className="w-full table-fixed text-left text-sm">
+        <table className="w-full table-fixed text-center text-sm">
           <thead className="border-b bg-gray-50 text-gray-600">
             <tr>
               <th
-                className="w-[260px] cursor-pointer px-4 py-3 text-center font-semibold hover:bg-gray-100"
+                className="w-[280px] cursor-pointer px-4 py-3 text-center font-semibold hover:bg-gray-100"
                 onClick={() => onHeaderClick("claimNumber")}
+                title={`Sort by ${sortLabel("claimNumber")}`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2">
                   Claim #
-                  <SortIndicator col="claimNumber" />
+                  <SortIndicator active={sortKey === "claimNumber"} dir={sortDir} />
                 </div>
               </th>
 
               <th
-                className="cursor-pointer px-4 py-3 font-semibold hover:bg-gray-100"
+                className="cursor-pointer px-4 py-3 text-center font-semibold hover:bg-gray-100"
                 onClick={() => onHeaderClick("owner")}
+                title={`Sort by ${sortLabel("owner")}`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2">
                   Owner
-                  <SortIndicator col="owner" />
+                  <SortIndicator active={sortKey === "owner"} dir={sortDir} />
                 </div>
               </th>
 
               <th
-                className="cursor-pointer px-4 py-3 font-semibold hover:bg-gray-100"
+                className="cursor-pointer px-4 py-3 text-center font-semibold hover:bg-gray-100"
                 onClick={() => onHeaderClick("vehicle")}
+                title={`Sort by ${sortLabel("vehicle")}`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2">
                   Vehicle
-                  <SortIndicator col="vehicle" />
+                  <SortIndicator active={sortKey === "vehicle"} dir={sortDir} />
                 </div>
               </th>
 
               <th
-                className="cursor-pointer px-4 py-3 font-semibold hover:bg-gray-100"
+                className="cursor-pointer px-4 py-3 text-center font-semibold hover:bg-gray-100"
                 onClick={() => onHeaderClick("vin")}
+                title={`Sort by ${sortLabel("vin")}`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2">
                   VIN
-                  <SortIndicator col="vin" />
+                  <SortIndicator active={sortKey === "vin"} dir={sortDir} />
                 </div>
               </th>
 
               <th
-                className="w-[160px] cursor-pointer px-4 py-3 text-center font-semibold hover:bg-gray-100"
+                className="w-[180px] cursor-pointer px-4 py-3 text-center font-semibold hover:bg-gray-100"
                 onClick={() => onHeaderClick("status")}
+                title={`Sort by ${sortLabel("status")}`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2">
                   Status
-                  <SortIndicator col="status" />
+                  <SortIndicator active={sortKey === "status"} dir={sortDir} />
                 </div>
               </th>
             </tr>
@@ -230,19 +243,23 @@ export default function Home() {
             ) : (
               filteredAndSorted.map((c) => (
                 <tr key={c.claimNumber} className="border-b last:border-b-0 hover:bg-gray-50">
-                  <td className="px-4 py-3 text-center font-medium text-gray-900">
+                  {/* Claim # (pill button, single-line ellipsis) */}
+                  <td className="px-4 py-3 text-center">
                     <Link
                       href={`/claims/${encodeURIComponent(c.claimNumber)}`}
-                      className="mx-auto block max-w-[240px] break-all text-blue-700 underline-offset-2 hover:underline"
-                      title="Open claim"
+                      title={c.claimNumber}
+                      className="mx-auto inline-flex max-w-[240px] items-center justify-center rounded-md border border-gray-300 bg-gray-50 px-3 py-1 text-sm font-medium text-gray-800 hover:bg-gray-100"
                     >
-                      {c.claimNumber}
+                      <span className="truncate">{c.claimNumber}</span>
                     </Link>
                   </td>
 
-                  <td className="px-4 py-3">{c.owner}</td>
-                  <td className="px-4 py-3">{c.vehicle}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-700">{c.vin}</td>
+                  <td className="px-4 py-3 text-center">{c.owner}</td>
+                  <td className="px-4 py-3 text-center">{c.vehicle}</td>
+                  <td className="px-4 py-3 text-center font-mono text-xs text-gray-700">
+                    {c.vin}
+                  </td>
+
                   <td className="px-4 py-3 text-center">
                     <StatusBadge
                       status={c.status}
